@@ -1,0 +1,82 @@
+State In Quote App
+
+In this app, we have a DataManager class responsible for managing data rendering and controlling the
+app's state. The class maintains two key state variables:
+
+curPage: This variable tracks the current page, allowing manual switching between the list and detail
+screens. Since curPage is a state variable, whenever its value changes, it triggers recomposition of
+the App() composable, ensuring that the UI is updated to reflect the new page.
+
+isDataLoaded: This variable indicates whether the data has been successfully loaded. It's marked as
+a State variable, which means any changes to it will automatically trigger a UI recomposition. This
+ is particularly useful for handling network errors — if data loading fails, isDataLoaded will change,
+ prompting the UI to update (e.g., showing an error message or retry button).
+
+Handling State with Coroutines:
+In this app, the function loadDataFromAssets is responsible for loading data from assets and is
+executed on the IO dispatcher, which is optimized for I/O operations like reading files. Meanwhile,
+the state variable isDataLoaded is accessed on the main thread (UI thread). This is possible because
+Jetpack Compose state variables are thread-safe and can be accessed from different threads. Therefore
+, while data loading happens on a background thread (via the IO dispatcher), any changes to the state
+(like isDataLoaded) are propagated back to the main thread, ensuring the UI is updated correctly without
+ running into concurrency issues.
+
+
+
+Event Handling =>
+In this app, we have built a Quote application where clicking on a QuoteItem opens a detailed screen
+ for that specific quote. Pressing the back button returns the user to the list of quotes. However,
+ the current implementation doesn’t follow standard best practices for managing navigation, and the
+ quotes are loaded from a JSON file with manual navigation handling.
+
+Best Practices in Jetpack Compose:
+To build a more structured and scalable Compose application, especially for complex apps, it's essential
+ to follow a clean architecture. This includes:
+
+Creating separate Composables (screens) for each UI component, such as a Quote List screen and a Quote Detail screen.
+Managing navigation and screen coordination from a central point, such as MainActivity.
+Event Handling in Jetpack Compose:
+In Jetpack Compose, event handling flows in a specific direction:
+
+Event trigger: Events like onClick occur on child components (e.g., a button or list item).
+Event handling: The handling of these events flows back from the child to the parent component, often
+all the way up to the MainActivity.
+For example, in this app:
+
+The onClick event is triggered when a QuoteListItem is clicked.
+This event is passed up to the QuoteList, then to the QuoteListScreen, and finally to the MainActivity.
+Thus, the flow is:
+
+Event Trigger: From Parent to Child (MainActivity → Screen → List → ListItem).
+Event Handling: From Child to Parent (ListItem → List → Screen → MainActivity).
+
+It is called Unidirectional Data flow where event occurs at child and its state is managed parent.
+
+Managing Event Handling with Lambda Functions:
+To manage event handling efficiently, we pass a lambda function from the MainActivity down to all
+child Composables. When a QuoteListItem is clicked, this lambda is invoked, sending the click event
+back up to the MainActivity.
+
+Here’s how it works:
+
+The lambda function passed from MainActivity takes the clicked quote as a parameter.
+When a quote is clicked, the lambda in MainActivity captures the clicked quote and triggers the
+function responsible for switching to the detail screen.
+This function updates the curPage (current screen) and curQuote (selected quote) state variables.
+When curPage changes, the App() Composable is recomposed, and it detects the state change. This
+triggers the display of the Quote Detail screen, where data for the curQuote is fetched from DataManager.
+In summary, the onClick event is passed up from the child (QuoteListItem) to the parent (MainActivity),
+ and the parent handles navigation and state management.
+
+In kotlin lambda can be passed in two ways :
+Trailing Lambda -> it is passed as a arguments in fun
+
+1.Feature of kotlin => f(){
+    onClick{
+
+    }
+} -> here automatically the fun will add it in the last of argument.
+
+2.f(content = {
+   onClick
+}) -> manually we pass the arguments.

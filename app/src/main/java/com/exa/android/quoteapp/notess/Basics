@@ -1,0 +1,196 @@
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {  // from here same as in xml app starts
+            FirstComposTheme {
+
+                    layoutBasics()// this is the fun call for app run
+            }
+        }
+    }
+}
+
+@Composable // these are the actual fun called composable used to create UI
+fun Greeting(name: String, modifier: Modifier = Modifier) {
+    Text(
+        text = "Hello $name!",
+        modifier = modifier
+    )
+}
+
+@Preview(showBackground = true, widthDp = 300, heightDp = 300)
+@Composable
+fun GreetingPreview() {// this fun is used for preview purpose, to create ui we need to call fun from main class
+    FirstComposTheme {
+        Column{ // this code can be used for creating a listview but it is not a recycler view
+            listItemView(R.drawable.ic_launcher_background, "Jhon Doe", "Software Developer")
+            listItemView(R.drawable.ic_launcher_background, "Jhon Doe", "Software Developer")
+            listItemView(R.drawable.ic_launcher_background, "Jhon Doe", "Software Developer")
+        }
+    }
+}
+
+
+
+// CONCEPT OF STATE, RECOMPOSITION, UPDATION
+
+@Composable
+fun NormalConcept() {  // In this condition the ui always remains same either we the data in textField will be changed
+    TextField( // it is an Edit Text in normal View
+        value = "Hi",
+        onValueChange = { // called as some action performs
+            Log.d("State", it)
+        },
+        label = {  // an eg of composition over inheritance, not possible in View
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher_background),
+                contentDescription = "Dummy"
+            )
+        }
+    )
+}
+
+@Composable
+fun StateConcept() { // here we chage the state ie data is chaged which causes to update the UI
+    val state = remember { // to retain its previous value whenever fun repeatedly call
+        mutableStateOf("Hi")
+    }
+    TextField(
+        value = state.value,
+        onValueChange = {
+            state.value = it
+        },
+        label = {
+            Text("Enter Message")
+        }
+    )
+}
+
+// CONCEPT OF LAYOUT
+
+@Composable
+fun layoutBasics(){
+    Column(
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box {
+            Image(painter = painterResource(id = R.drawable.ic_launcher_background), contentDescription = "")
+            Image(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = "")
+        }
+        Text(text = "A")
+        Text(text = "B")
+    }
+}
+
+
+@Composable
+fun listItemView(ImgId : Int, name : String, occupation : String){ // a Parameterised fun
+    Row(Modifier.padding(8.dp)){
+        Image(painter = painterResource(id = ImgId), contentDescription = "",
+            Modifier.size(40.dp))
+        Column (){
+          Text(text = name, fontWeight = FontWeight.Bold)
+          Text(text = occupation, fontWeight = FontWeight.Thin, fontSize = 12.sp)
+        }
+    }
+}
+/*
+* COLUMN - It acts as Linear Layout with vertical orientation
+* ROW - It acts as LL with Horizontal orientation
+*
+* VERTICAL ARRANGEMENT - It is used to arrange the component with proper weight and space between them.
+* HORIZONTAL ALIGNMENT - It is used to align the components horizontally
+*
+* -> Space Between - It is used to arrange the components based on the max possible space, ie as far as possible.
+* -> Space Evenly - It is used to provide equal spacing and many more are present
+*
+* BOX -  Same as frame layout in XML
+*
+ */
+
+
+ In this app we have crated a Quote app where on QuoteItem click a Quote Detail screen will be displayed,
+ whereas on Back pressed again render to quote list.Here no standard is followed as well as a Json file is
+ used for quotes whereas for navigation manually proceed.
+
+ For Compose always we need follow a standard, for making complex application we have to firstly create separate
+ screens and their relevant codebase their after coordinate them from MainActivity.
+
+Event Handling :
+In Compose the Event  takes place from parent to child ie onclick, etc event occurs on child view whereas
+its handling managed from child to Parent ie at Main Activity. For eg : -
+In this application the onClick event takes place at QuoteListItem and then passed from here to QuoteList then
+QuoteListScreen to MainActivity ie
+Event = Parent -> Child
+Handling = Child -> Parent as ListItem->List->Screen->Main
+
+To manage it, a lamda is passed as a parameter from main Activity to all child that is returned from ListItem when
+it is click.So now we got the onclick and switch to detail screen but which quote is clicked, to manage it our
+lamda uses quote as a parameter,that quote is picked by main activity lamda and pass to switch pages fun that update
+the curPage and curQuote data, now as curPage state changes recomposition of App occurs and else condition will run
+that get data from DataManager curQuote.
+
+State=>
+
+1.Recompostion => It is used to update the UI of screen as the state changes ie the state associated with the
+  component chages. It runs the composable functions again and again on data changed.
+  Only those composable fun will run whose data have changed, if we consider tree then only those subtree will
+  run whose parent data is changed.
+  Which composable will run will be decided by the Jetpack compose itself we won't cumtomise it.
+
+  Best Practise :
+  -> Try to include as low as fun, lamda.
+  -> The composable fun should be pure, Pure fun means a function that recives some input and provides some output
+  it should not performing the data storage operation or data assignmnet etc.
+  -> No asynchronous task performed.
+  -> The order of composable is in parallel, ie any order of recomposition can be followed.
+
+
+
+  -> Recomposition skips as many as composable function and lamda as possible
+  -> Recomposition is optimistic and can be canceled. (if recomposition starts and before completion if again data changes then
+  suddenly recomposition stops and again new recomposition takes place)
+  -> A composable fun may be run quite frequently, as often as every frame of animation.
+
+  Eg :
+
+  NamePicker(
+  header : String,
+  name : List<String>
+  ){
+  Column{
+    Text(header)
+
+    LazyColumn{
+      Items(names){
+        setName()
+    }
+  }
+  }
+
+  Here the text composable will run only when the header changes, it won't impact the LazyColumn composable
+  and vice - versa.
+
+  fun Recomposition(){
+       // During Initial Composition
+      val state = rememberMutableStateOf(0.0)
+
+      Button(onClick =
+      state.value = Math.random()
+      }){ // During composition and Recomposition
+       Text(text = "state.value.toString()")
+       }
+  }
+
+
+Here we have created a DataManager class that handles data rendering where we have managed the state of curPage,
+isDataLoaded.
+isDataLoaded is used as state because whenever data lost due to network error state changes and recomposition
+takes place.
+curPage is used for manual switching between listItem and detail screen now as curPage changes ie the state changes
+and recomposition occurs of App() composable.
+
+State with Coroutines : In this app the fun loaddatafromassets run on IO Dispatcher whereas we are accessing the state
+varialbe isDataLoaded on Main Thread, this happens bec. state can be accessed from each thread.

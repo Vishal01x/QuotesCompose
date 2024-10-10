@@ -1,0 +1,43 @@
+Handling Side Effects ->
+1. Launched Effect -
+
+In Jetpack Compose, LaunchedEffect is a composable function that allows you to run some side-effect
+code when certain conditions are met or when the composable enters the composition (i.e., when it's
+first displayed on the screen). It is often used for operations like loading data, making network requests,
+or running any code that shouldn't be tied directly to the UI state.
+
+Key Points:
+
+Side-effects: These are actions that affect something outside the composable, like updating the database,
+showing a notification, or making a network call.
+
+Recomposition: Jetpack Compose can recompose your UI based on state changes. LaunchedEffect makes sure
+that the effect code is only triggered when you want it to, not during every recomposition.
+How it works:
+LaunchedEffect takes one or more keys (usually state variables) as parameters. The effect will run
+again only if the keys change.
+
+If the keys don’t change, the effect won’t rerun during recomposition, which prevents unnecessary side effects.
+
+LaunchedEffect(key1, key2, ...) {
+    // Your side-effect code here
+}
+Example:
+Let’s say you want to display a message after a screen is loaded. You can use LaunchedEffect to show
+ a message using Toast.
+
+@Composable
+fun MyScreen() {
+    // This is the key, usually a state or some condition
+    val showMessage = true
+
+    LaunchedEffect(showMessage) {
+        if (showMessage) {
+            // This will only run when the screen first loads or when `showMessage` changes
+            Toast.makeText(LocalContext.current, "Screen Loaded!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Rest of your UI
+    Text("Welcome to MyScreen!")
+}
